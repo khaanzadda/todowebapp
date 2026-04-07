@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { collection, addDoc, deleteDoc, doc, onSnapshot, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { CalendarDays, Pencil, Plus, Save, Trash2, X } from 'lucide-react';
-import { db } from '../firebase/firebase';
+import { db, logout } from '../firebase/firebase';
 
 const priorityOptions = [
   { value: 'low', label: 'Low', chipClass: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
@@ -196,69 +196,101 @@ const Dashboard = ({ user }) => {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      setError('');
+      await logout();
+    } catch (err) {
+      console.error('Failed to logout:', err);
+      setError(err.message || 'Logout failed.');
+    }
+  };
+
   return (
-    <div className="mx-auto max-w-5xl p-6">
-      <header className="mb-8 flex flex-col gap-2">
-        <p className="text-sm font-semibold uppercase tracking-[0.25em] text-blue-600">Dashboard</p>
-        <h1 className="text-3xl font-black text-gray-900">Welcome, {user.email.split('@')[0]}</h1>
-        <p className="text-gray-500">Create tasks, set priorities, and keep deadlines visible.</p>
-      </header>
+    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6">
+      <div className="mx-auto w-full max-w-3xl">
+        <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm">
+          <header className="mb-4">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex flex-col gap-1">
+                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-blue-600">Dashboard</p>
+                <h1 className="text-2xl sm:text-3xl font-black text-gray-900">Welcome, {user.email.split('@')[0]}</h1>
+                <p className="text-gray-500 text-sm">Create tasks, set priorities, and keep deadlines visible.</p>
+              </div>
 
-      {error && <p className="mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">{error}</p>}
+              <div>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-100"
+                  aria-label="Logout"
+                >
+                  Logout
+                </button>
+              </div>
+            </div>
+          </header>
 
-      <form onSubmit={addTodo} className="mb-8 rounded-3xl border border-gray-200 bg-white p-5 shadow-sm">
-        <div className="grid gap-3 md:grid-cols-[1.5fr_1fr_0.8fr_1fr_auto]">
-          <input
-            type="text"
-            value={form.title}
-            onChange={(e) => updateCreateForm('title', e.target.value)}
-            className="w-full rounded-xl border border-gray-200 px-4 py-3 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-            placeholder="Add a task title"
-          />
-          <input
-            type="text"
-            value={form.description}
-            onChange={(e) => updateCreateForm('description', e.target.value)}
-            className="w-full rounded-xl border border-gray-200 px-4 py-3 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-            placeholder="Short description"
-          />
-          <select
-            value={form.priority}
-            onChange={(e) => updateCreateForm('priority', e.target.value)}
-            className="rounded-xl border border-gray-200 px-4 py-3 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-          >
-            {priorityOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label} priority
-              </option>
-            ))}
-          </select>
-          <input
-            type="date"
-            value={form.dueDate}
-            onChange={(e) => updateCreateForm('dueDate', e.target.value)}
-            className="rounded-xl border border-gray-200 px-4 py-3 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-          />
-          <button
-            className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-3 text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-400"
-            type="submit"
-            disabled={isAdding}
-            aria-label="Add task"
-          >
-            <Plus size={20} />
-          </button>
+          {error && <p className="mb-4 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">{error}</p>}
+
+          <form onSubmit={addTodo} className="mb-0">
+            <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
+              <input
+                type="text"
+                value={form.title}
+                onChange={(e) => updateCreateForm('title', e.target.value)}
+                className="col-span-1 lg:col-span-2 w-full rounded-xl border border-gray-200 px-4 py-3 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                placeholder="Add a task title"
+              />
+              <input
+                type="text"
+                value={form.description}
+                onChange={(e) => updateCreateForm('description', e.target.value)}
+                className="w-full rounded-xl border border-gray-200 px-4 py-3 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                placeholder="Short description"
+              />
+              <select
+                value={form.priority}
+                onChange={(e) => updateCreateForm('priority', e.target.value)}
+                className="rounded-xl border border-gray-200 px-4 py-3 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              >
+                {priorityOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label} priority
+                  </option>
+                ))}
+              </select>
+              <input
+                type="date"
+                value={form.dueDate}
+                onChange={(e) => updateCreateForm('dueDate', e.target.value)}
+                className="rounded-xl border border-gray-200 px-4 py-3 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              />
+              <button
+                className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-3 text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-400 w-full sm:w-auto"
+                type="submit"
+                disabled={isAdding}
+                aria-label="Add task"
+              >
+                <Plus size={20} />
+              </button>
+            </div>
+          </form>
         </div>
-      </form>
 
-      <div className="space-y-4">
-        {todos.length === 0 && <p className="rounded-2xl border border-dashed border-gray-300 py-12 text-center text-gray-400">No tasks yet.</p>}
+        <div className="mt-6 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+          {todos.length === 0 && (
+            <div className="col-span-full rounded-2xl border border-dashed border-gray-300 py-12 text-center text-gray-400">
+              No tasks yet.
+            </div>
+          )}
 
-        {todos.map((todo) => {
-          const priority = getPriorityMeta(todo.priority);
-          const isEditing = editingId === todo.id;
+          {todos.map((todo) => {
+            const priority = getPriorityMeta(todo.priority);
+            const isEditing = editingId === todo.id;
 
           return (
-            <article key={todo.id} className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm">
+            <article key={todo.id} className="rounded-3xl border border-gray-200 bg-white p-4 sm:p-5 shadow-sm hover:shadow-lg transition-shadow">
               {isEditing ? (
                 <div className="grid gap-3 md:grid-cols-[1.3fr_1fr_0.8fr_1fr_auto]">
                   <input
@@ -372,6 +404,7 @@ const Dashboard = ({ user }) => {
             </article>
           );
         })}
+      </div>
       </div>
     </div>
   );
